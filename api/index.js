@@ -1,36 +1,38 @@
 const express = require('express')
-const fs = require('fs')
+const { createClient } = require('@vercel/kv')
+require("dotenv").config();
 
 const app = express();
-const port = 3001;
+const port = 3000;
 app.use(express.json());
 
-app.get('/hs', (req, res) => {
-    // const id = req.query.id
 
-    // if (!id) {
-    //     return res.send(undefined)
-    // }
-    
-    // const data = JSON.parse(fs.readFileSync('./highScores.json',
-    // { encoding: 'utf8', flag: 'r' }))
-
-    // res.send(String(data[id]))
+const highScores = createClient({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
 });
 
-app.post('/hs', (req, res) => {
-    // const id = req.query.id
-    // if (!id) {
-    //     res.send(404)
-    // }
-    
-    // const data = JSON.parse(fs.readFileSync('./highScores.json',
-    // { encoding: 'utf8', flag: 'r' }));
-    // data[id] = req.body.newHighScore;
+app.get('/hs', async (req, res) => {
+    const id = req.query.id
 
-    // fs.writeFileSync('./highScores.json', JSON.stringify(data),  { encoding: 'utf8', flag: 'w' })
+    if (!id) {
+        return res.send(undefined)
+    }
 
-    // res.send(201);
+    const highScore = await highScores.get(id)
+
+    res.send(String(highScore))
+});
+
+app.post('/hs', async (req, res) => {
+    const id = req.query.id
+    if (!id) {
+        res.send(404)
+    }
+
+   await highScores.set(id, req.body.highScore, { ex: 100, nx: true });
+
+    res.send(201);
 });
 
 app.listen(port, () => {

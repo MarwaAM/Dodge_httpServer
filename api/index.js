@@ -26,11 +26,12 @@ app.get('/hs', async (req, res) => {
 
 app.post('/hs', async (req, res) => {
     const id = req.query.id
-    if (!id) {
+    const highScore = req.body.highScore
+    if (!id || !highScore) {
         res.send(404)
     }
 
-   await highScores.set(id, req.body.highScore, { ex: 100, nx: true });
+   await highScores.set(id, highScore);
 
     res.send(201);
 });
